@@ -1,0 +1,112 @@
+			<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Reconhecedor de Alimentos</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f6f6f6;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        h1 {
+            margin-top: 20px;
+            color: #333;
+        }
+        video {
+            width: 90%;
+            max-width: 400px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        #info {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0px 0px 8px #bdbdbd;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Reconhecedor de Alimentos</h1>
+
+    <video id="camera" autoplay playsinline></video>
+
+    <div id="info">
+        <h2 id="foodName">Aponte a câmera para um alimento...</h2>
+        <p id="recipe"></p>
+        <p id="nutrition"></p>
+    </div>
+
+<script>
+    let model;
+
+    const recipes = {
+        "banana": {
+            receita: "Vitamina de banana: bata banana + leite + açúcar.",
+            nutricao: "Rica em potássio, fibras e vitaminas B."
+        },
+        "apple": {
+            receita: "Salada de maçã: maçã picada + iogurte + mel.",
+            nutricao: "Boa fonte de fibras e vitamina C."
+        },
+        "orange": {
+            receita: "Suco de laranja natural.",
+            nutricao: "Excelente fonte de vitamina C."
+        },
+        "pizza": {
+            receita: "Pizza caseira simples com molho, queijo e massa básica.",
+            nutricao: "Alto teor calórico e carboidratos."
+        }
+    };
+
+    async function startCamera() {
+        const video = document.getElementById("camera");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+    }
+
+    async function loadModel() {
+        model = await mobilenet.load();
+    }
+
+    async function identifyFood() {
+        const video = document.getElementById("camera");
+        const prediction = await model.classify(video);
+
+        if (prediction[0].probability > 0.4) {
+            let food = prediction[0].className.toLowerCase();
+
+            document.getElementById("foodName").innerText = food;
+
+            if (recipes[food]) {
+                document.getElementById("recipe").innerText = "🍽 Receita: " + recipes[food].receita;
+                document.getElementById("nutrition").innerText = "💡 Nutrição: " + recipes[food].nutricao;
+            } else {
+                document.getElementById("recipe").innerText = "Receita não encontrada.";
+                document.getElementById("nutrition").innerText = "Informação nutricional não disponível.";
+            }
+        }
+    }
+
+    window.onload = async () => {
+        await startCamera();
+        await loadModel();
+
+        setInterval(identifyFood, 1500); // otimizado: reconhece a cada 1.5s
+    };
+</script>
+
+</body>
+</html>
